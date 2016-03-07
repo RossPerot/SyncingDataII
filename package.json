@@ -1,0 +1,19 @@
+{
+  "name": "ObjectUpdates",
+  "version": "0.0.0",
+  "description": "A simple application for updating object properties through websockets",
+  "main": "./src/app.js",
+  "scripts": {
+    "start": "node ./src/app.js",
+    "pretest": "jshint ./src",
+    "test": "echo \"Tests complete\""
+  },
+  "author": "Cody Van De Mark",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^1.4.5"
+  },
+  "devDependencies": {
+    "jshint": "^2.9.1"
+  }
+}

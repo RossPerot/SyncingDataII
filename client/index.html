@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        "use strict";
+    
+        var canvas;
+        var ctx;
+        //our websocket connection
+        var socket; 
+		var draws = {};
+		var time;
+		var score = 0;
+        var mouseX = 0;
+		var mouseY = 0;
+		var userNumber = Math.floor((Math.random()*400)) + 1;
+        //redraw our square to the screen
+        function draw()
+		{
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			var drawCall = draws[0];
+			ctx.fillRect(drawCall.x, drawCall.y, drawCall.width, drawCall.height);
+			ctx.font = "20px Arial";
+			ctx.fillText("Score: " + score, 5, 15);
+		}
+		
+		function setCalls()
+		{
+			time = new Date().getTime();
+
+			draws[time] = {x: 100, y: 100, width: 100, height: 100};
+
+			time = new Date().getTime();
+			
+			var coords = {x: (Math.floor((Math.random()*400)) + 1), y:(Math.floor((Math.random()*400)) + 1), width:100, height:100};
+			socket.emit('draw', {time: time, coords: coords});
+		}
+		
+		function handleMessage(data)
+		{
+			draws = data.draws;
+			score = data.users[userNumber];
+			draw();
+		}
+		function handleSetup(data)
+		{
+			draws = data.draws;
+			score = 0;
+			draw();
+		}
+		function getClickPosition(e) {
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+		}
+		function checkClick(e) {
+			getClickPosition(e);
+			var time = new Date().getTime();
+			socket.emit('click', {time: time, user: userNumber, mouseX: mouseX, mouseY: mouseY, coords: draws[0]});
+		}
+        function init() {
+            canvas = document.querySelector("#canvas");
+            ctx = canvas.getContext("2d");
+			canvas.addEventListener("click", checkClick, false);
+            //Connect to our server (io added automatically by socket.io when embedding it in the HTTP app on the server side)
+            //This will return a new websocket connection. Every call to io.connect will return a new websocket connection 
+            //BUT not necessarily close the existing one. 
+            //You can absolutely use multiple websockets on the client, but you have to manage which ones are listening to which
+            //messages. In cases like this, you only need one. 
+            socket = io.connect();
+            
+            //When the socket connects successfully
+            socket.on('connect', function () {
+				socket.emit('user', userNumber);
+            });      
+            
+            //When our socket receives 'updatedMovement' messages from the server, call our update function
+            socket.on('drawObjects', handleMessage);
+			socket.on('setup', handleSetup);
+        }
+      window.onload = init;
+    </script>
+</head>
+<body>
+    <canvas id="canvas" height="500" width="500">Please use an HTML 5 browser</canvas>
+</body>
+</html>
